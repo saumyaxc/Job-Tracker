@@ -39,48 +39,92 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
             editingIndex === index ? (
                 // Edit Mode
                 <li
-                key={index}
-                className="bg-white dark:bg-gray-800 p-4 rounded-md shadow space-y-2"
-                >
-                <input
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
-                />
-                <input
-                    name="position"
-                    value={formData.position}
-                    onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
-                />
-                <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
-                >
-                    <option>Applied</option>
-                    <option>Interview</option>
-                    <option>Offer</option>
-                    <option>Rejected</option>
-                </select>
+                    key={index}
+                    className="bg-white dark:bg-gray-800 p-4 rounded-md shadow space-y-2"
+                    >
+                    <input
+                        name="company"
+                        value={formData.company}
+                        onChange={handleChange}
+                        placeholder="Company"
+                        className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                    />
+                    <input
+                        name="position"
+                        value={formData.position}
+                        onChange={handleChange}
+                        placeholder="Position"
+                        className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                    />
+                    <select
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                    >
+                        <option>Applied</option>
+                        <option>Interview</option>
+                        <option>Assessment</option>
+                        <option>Offer</option>
+                        <option>Rejected</option>
+                    </select>
 
-                <div className="flex gap-2">
-                    <button
-                    onClick={saveEdit}
-                    className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
-                    >
-                    Save
-                    </button>
-                    <button
-                    onClick={cancelEditing}
-                    className="bg-gray-400 text-white px-3 py-1 rounded-md hover:bg-gray-500"
-                    >
-                    Cancel
-                    </button>
-                </div>
-                </li>
+                    <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleChange}
+                        placeholder="Location (optional)"
+                        className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                    />
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Date Applied
+                        </label>
+                        <input
+                            type="date"
+                            name="dateApplied"
+                            value={formData.dateApplied}
+                            onChange={handleChange}
+                            className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                        />
+                    </div>
+
+
+                    {/* Show Assessment Due Date only if status is Assessment */}
+                    {formData.status === 'Assessment' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            Assessment Due Date
+                            </label>
+                            <input
+                            type="date"
+                            name="assessmentDue"
+                            value={formData.assessmentDue}
+                            onChange={handleChange}
+                            className="w-full px-2 py-1 border rounded-md bg-pink-50 border-pink-300"
+                            />
+                        </div>
+                    )}
+
+
+                    <div className="flex gap-2">
+                        <button
+                        onClick={saveEdit}
+                        className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600"
+                        >
+                        Save
+                        </button>
+                        <button
+                        onClick={cancelEditing}
+                        className="bg-gray-400 text-white px-3 py-1 rounded-md hover:bg-gray-500"
+                        >
+                        Cancel
+                        </button>
+                    </div>
+                    </li>
+
             ) : (
                 // View Mode
                 <li
@@ -89,10 +133,20 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
                 >
                 <div>
                     <p className="font-semibold text-lg text-pink-700 dark:text-pink-300">
-                    {job.company} – {job.position}
+                        {job.company} – {job.position}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-300">{job.status}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Status: {job.status}</p>
+                    {job.location && (
+                        <p className="text-sm text-gray-500 dark:text-gray-300">Location: {job.location}</p>
+                    )}
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Applied on: {job.dateApplied}</p>
+                    {job.assessmentDue && (
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                        Assessment due: {job.assessmentDue}
+                        </p>
+                    )}
                 </div>
+
 
                 <div className="flex gap-2">
                     <button

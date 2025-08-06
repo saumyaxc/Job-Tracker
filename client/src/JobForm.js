@@ -7,6 +7,9 @@ const JobForm = ({ onAdd }) => {
     company: '',
     position: '',
     status: 'Applied',
+    location: '',
+    dateApplied: '',
+    assessmentDue: '',
   });
 
   const handleChange = (e) => {
@@ -14,13 +17,32 @@ const JobForm = ({ onAdd }) => {
   };
 
   const handleSubmit = (e) => {
-      e.preventDefault(); 
-      if (formData.company && formData.position) {
-        onAdd(formData); 
-        setFormData({ company: '', position: '', status: 'Applied' }); 
-        console.log('Submitting job:', formData);
-      }
-  };
+    e.preventDefault();
+
+    if (formData.company && formData.position) {
+        const today = new Date().toISOString().split('T')[0];
+
+        const finalFormData = {
+        ...formData,
+        dateApplied: formData.dateApplied || today, // <-- Auto-fill if empty
+        };
+
+        onAdd(finalFormData);
+
+        // Reset form
+        setFormData({
+        company: '',
+        position: '',
+        status: 'Applied',
+        location: '',
+        dateApplied: '',
+        assessmentDue: '',
+        });
+
+        console.log('Submitting job:', finalFormData);
+    }
+};
+
 
 
   return (
@@ -58,11 +80,49 @@ const JobForm = ({ onAdd }) => {
           className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
         >
           <option>Applied</option>
+          <option>Assessment</option>
           <option>Interview</option>
           <option>Offer</option>
           <option>Rejected</option>
         </select>
       </div>
+
+      <div>
+        <label className="block font-medium text-gray-700 dark:text-gray-200">Location (optional)</label>
+        <input
+            type="text"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+        />
+        </div>
+
+        <div>
+        <label className="block font-medium text-gray-700 dark:text-gray-200">Date Applied</label>
+        <input
+            type="date"
+            name="dateApplied"
+            value={formData.dateApplied}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+            required
+        />
+        </div>
+
+        {/* Show Assessment Due Date ONLY if status === 'Assessment' */}
+        {formData.status === 'Assessment' && (
+        <div>
+            <label className="block font-medium text-gray-700 dark:text-gray-200">Assessment Due Date</label>
+            <input
+            type="date"
+            name="assessmentDue"
+            value={formData.assessmentDue}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+            />
+        </div>
+        )}
 
       <button
         type="submit"
