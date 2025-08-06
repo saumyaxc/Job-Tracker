@@ -11,36 +11,38 @@ const JobForm = ({ onAdd }) => {
     assessmentDue: '',
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const dueDate = new Date(formData.assessmentDueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Remove time component for accurate comparison
+
+    if (formData.assessmentDueDate && dueDate < today) {
+        alert("⚠️ Assessment due date cannot be in the past!");
+        return;
+    }
+
     if (formData.company && formData.position) {
-        const today = new Date().toISOString().split('T')[0];
-
-        const finalFormData = {
-        ...formData,
-        dateApplied: formData.dateApplied || today, // <-- Auto-fill if empty
-        };
-
-        onAdd(finalFormData);
-
-        // Reset form
+        onAdd(formData);
         setFormData({
             company: '',
             position: '',
             status: 'Applied',
             location: '',
-            dateApplied: '',
-            assessmentDue: '',
+            dateApplied: new Date().toISOString().split('T')[0],
+            assessmentDueDate: ''
         });
-
-        console.log('Submitting job:', finalFormData);
     }
-};
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+    }));
+  };
 
 
 
@@ -121,7 +123,7 @@ const JobForm = ({ onAdd }) => {
             <label className="block font-medium text-gray-700 dark:text-gray-200">Assessment Due Date</label>
             <input
             type="date"
-            name="assessmentDue"
+            name="assessmentDueDate"
             value={formData.assessmentDue}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"

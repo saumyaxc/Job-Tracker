@@ -29,6 +29,16 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
     cancelEditing();
   }
 
+  const isDueSoon = (dueDate) => {
+    if (!dueDate) return false;
+    const today = new Date();
+    const target = new Date(dueDate);
+    const diffInTime = target.getTime() - today.getTime();
+    const diffInDays = diffInTime / (1000 * 3600 * 24);
+    return diffInDays <= 3 && diffInDays >= 0;
+  };
+
+
   if (jobs.length === 0) {
     return <p className="text-center text-gray-600 dark:text-gray-400 italic">No jobs added yet.</p>;
   }
@@ -146,6 +156,18 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
                         </p>
                     )}
                 </div>
+
+                {job.assessmentDueDate && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                        📅 Assessment Due: {job.assessmentDueDate}
+                        {isDueSoon(job.assessmentDueDate) && (
+                        <span className="ml-2 inline-block bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full animate-pulse">
+                            🔔 Due Soon!
+                        </span>
+                        )}
+                    </p>
+                )}
+
 
 
                 <div className="flex gap-2">
