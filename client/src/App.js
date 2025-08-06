@@ -1,12 +1,15 @@
 // src/App.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import JobForm from './JobForm';
 import JobList from './JobList';
 
 function App() {
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState(() => {
+    const savedJobs = localStorage.getItem('jobs');
+    return savedJobs ? JSON.parse(savedJobs) : [];
+  });
 
   const addJob = (job) => {
     setJobs((prevJobs) => [...prevJobs, job]);
@@ -16,6 +19,15 @@ function App() {
   const deleteJob = (indexToRemove) => {
     setJobs((prevJobs) => prevJobs.filter((_, index) => index !== indexToRemove));
   };
+
+  const editJob = (index, updatedJob) => {
+    setJobs((prevJobs) => prevJobs.map((job, i) => (i === index ? updatedJob : job)));
+  };
+
+  useEffect(() => {
+    localStorage.setItem('jobs', JSON.stringify(jobs));
+  }, [jobs]);
+
 
   return (
     <>
@@ -28,7 +40,7 @@ function App() {
 
           {/* Add Job Form */}
           <JobForm onAdd={addJob} />
-          <JobList jobs={jobs} onDelete={deleteJob} />
+          <JobList jobs={jobs} onDelete={deleteJob} onEdit={editJob}/>
         </div>
       </div>
     </>
