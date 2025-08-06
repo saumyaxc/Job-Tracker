@@ -1,9 +1,22 @@
 // src/App.js
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from './Navbar';
+import JobForm from './JobForm';
+import JobList from './JobList';
 
 function App() {
+  const [jobs, setJobs] = useState([]);
+
+  const addJob = (job) => {
+    setJobs((prevJobs) => [...prevJobs, job]);
+    console.log('Adding job to list:', job);
+  };
+
+  const deleteJob = (indexToRemove) => {
+    setJobs((prevJobs) => prevJobs.filter((_, index) => index !== indexToRemove));
+  };
+
   return (
     <>
       <Navbar />
@@ -13,20 +26,9 @@ function App() {
             🎯 Job Tracker
           </h1>
 
-          <div className="space-y-2">
-            <label className="block text-lg font-medium text-gray-700 dark:text-gray-200">
-              📁 Import Excel File
-            </label>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              className="w-full px-4 py-2 border border-pink-300 rounded-lg shadow-sm bg-pink-50 text-gray-800"
-            />
-          </div>
-
-          <div className="text-center text-gray-600 dark:text-gray-400 italic">
-            No job applications yet. Upload a file to get started!
-          </div>
+          {/* Add Job Form */}
+          <JobForm onAdd={addJob} />
+          <JobList jobs={jobs} onDelete={deleteJob} />
         </div>
       </div>
     </>
