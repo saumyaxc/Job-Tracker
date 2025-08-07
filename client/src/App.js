@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import ChevronDownIcon from '@heroicons/react/24/solid/ChevronDownIcon';
+import PlusIcon from '@heroicons/react/24/solid/PlusIcon';
 import Navbar from './Navbar';
 import JobForm from './JobForm';
 import JobList from './JobList';
+import AddJobModal from './AddJobModal';
 
 function App() {
   const [jobs, setJobs] = useState(() => {
@@ -13,6 +15,8 @@ function App() {
   });
 
   const [filterStatus, setFilterStatus] = useState('All');
+
+  const [showAdd, setShowAdd] = useState(false);
 
   const addJob = (job) => {
     setJobs((prevJobs) => [...prevJobs, job]);
@@ -36,36 +40,49 @@ function App() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-pink-100 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-6 transition-all">
-        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 space-y-8">
+        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 space-y-8 text-gray-800 dark:text-gray-100">
           <h1 className="text-4xl md:text-5xl font-bold text-center text-pink-700 dark:text-pink-300">
             🎯 Job Tracker
           </h1>
 
-          <div className="text-right mb-4">
-          <label className="mr-2 text-gray-700 dark:text-gray-200 font-medium">Filter by Status:</label>
-          <div className="relative inline-block w-60">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="block w-full appearance-none bg-white dark:bg-gray-800 border border-pink-300 text-gray-800 dark:text-white py-2 px-3 pr-10 rounded-md"
+           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            {/* Left: Add button */}
+            <button
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-2 bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700"
             >
-              <option value="All">All</option>
-              <option value="Applied">Applied</option>
-              <option value="Interview">Interview</option>
-              <option value="Assessment">Assessment</option>
-              <option value="Offer">Offer</option>
-              <option value="Rejected">Rejected</option>
-            </select>
+              <PlusIcon className="w-5 h-5" />
+              Add Job
+            </button>
 
-            <ChevronDownIcon
-              className="w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-300 pointer-events-none"
-            />
+            {/* Right: Filter */}
+            <div className="text-right">
+              <label className="mr-2 text-gray-700 dark:text-gray-200 font-medium">Filter by Status:</label>
+              <div className="relative inline-block w-60">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="block w-full appearance-none bg-white dark:bg-gray-800 border border-pink-300 text-gray-800 dark:text-white py-2 px-3 pr-10 rounded-md"
+                >
+                  <option value="All">All</option>
+                  <option value="Applied">Applied</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Assessment">Assessment</option>
+                  <option value="Offer">Offer</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+                <ChevronDownIcon
+                  className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300 pointer-events-none"
+                />
+              </div>
+            </div>
           </div>
-          </div>
-
 
           {/* Add Job Form */}
-          <JobForm onAdd={addJob} />
+          <AddJobModal open={showAdd} onClose={() => setShowAdd(false)}>
+            <JobForm onAdd={(job) => { addJob(job); setShowAdd(false); }} />
+          </AddJobModal>
+
           <JobList
             jobs={
               filterStatus === 'All'

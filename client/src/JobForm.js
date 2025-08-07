@@ -8,7 +8,8 @@ const JobForm = ({ onAdd }) => {
     status: 'Applied',
     location: '',
     dateApplied: '',
-    assessmentDue: '',
+    assessmentDueDate: '',
+    assessmentCompleted: false,
   });
 
   const handleSubmit = (e) => {
@@ -34,6 +35,14 @@ const JobForm = ({ onAdd }) => {
             assessmentDueDate: ''
         });
     }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const finalData = {
+    ...formData,
+    dateApplied: formData.dateApplied || todayStr,
+    assessmentCompleted: Boolean(formData.assessmentCompleted),
+    };
+    onAdd(finalData);
   };
 
   const handleChange = (e) => {
@@ -124,7 +133,7 @@ const JobForm = ({ onAdd }) => {
             <input
             type="date"
             name="assessmentDueDate"
-            value={formData.assessmentDue}
+            value={formData.assessmentDueDate}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
             />
