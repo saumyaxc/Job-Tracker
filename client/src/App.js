@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import ChevronDownIcon from '@heroicons/react/24/solid/ChevronDownIcon';
 import PlusIcon from '@heroicons/react/24/solid/PlusIcon';
+import MagnifyingGlassIcon from '@heroicons/react/24/solid/MagnifyingGlassIcon';
+
 import Navbar from './Navbar';
 import JobForm from './JobForm';
 import JobList from './JobList';
@@ -17,6 +19,8 @@ function App() {
   const [filterStatus, setFilterStatus] = useState('All');
 
   const [showAdd, setShowAdd] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   const addJob = (job) => {
     setJobs((prevJobs) => [...prevJobs, job]);
@@ -35,6 +39,22 @@ function App() {
     localStorage.setItem('jobs', JSON.stringify(jobs));
   }, [jobs]);
 
+  const matchesSearch = (job, q) => {
+    if (!q?.trim()) return true;
+    const s = q.trim().toLowerCase();
+    return (
+      job.company?.toLowerCase().includes(s) ||
+      job.position?.toLowerCase().includes(s)
+      // add location too if you want:
+      // || job.location?.toLowerCase().includes(s)
+    );
+  };
+
+  const filteredJobs = jobs.filter(
+    (job) =>
+      (filterStatus === 'All' || job.status === filterStatus) &&
+      matchesSearch(job, searchTerm)
+  );
 
   return (
     <>
@@ -56,6 +76,19 @@ function App() {
             </button>
 
             {/* Right: Filter */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search company or position..."
+                  className="w-64 pl-10 pr-3 py-2 rounded-md border border-pink-300 bg-white text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  aria-label="Search jobs"
+                />
+                <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
             <div className="text-right">
               <label className="mr-2 text-gray-700 dark:text-gray-200 font-medium">Filter by Status:</label>
               <div className="relative inline-block w-60">
@@ -84,14 +117,12 @@ function App() {
           </AddJobModal>
 
           <JobList
-            jobs={
-              filterStatus === 'All'
-                ? jobs
-                : jobs.filter((job) => job.status === filterStatus)
-            }
+            jobs={filteredJobs}
             onDelete={deleteJob}
             onEdit={editJob}
+            query={searchTerm}
           />
+
         </div>
       </div>
     </>

@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 
+const primaryBtn = "bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed";
+const neutralBtn = "bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded";
+
+const inputClass =
+  "w-full px-2 py-1 border rounded " +
+  "bg-pink-50 border-pink-300 " + // light mode
+  "dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 " + // dark mode
+  "focus:outline-none focus:ring-2 focus:ring-pink-400"
+
 const badgeClass = (status) => {
   const base = "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium";
   switch (status) {
@@ -11,8 +20,8 @@ const badgeClass = (status) => {
   }
 };
 
-const isDueSoon = (dueDate) => {
-  if (!dueDate) return false;
+const isDueSoon = (dueDate, completed = false) => {
+  if (!dueDate || completed) return false;
   const today = new Date();
   today.setHours(0,0,0,0);
   const target = new Date(dueDate);
@@ -20,8 +29,8 @@ const isDueSoon = (dueDate) => {
   return diff <= 3 && diff >= 0;
 };
 
-const isOverdue = (dueDate) => {
-  if (!dueDate) return false;
+const isOverdue = (dueDate, completed = false) => {
+  if (!dueDate || completed) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const target = new Date(dueDate);
@@ -29,7 +38,7 @@ const isOverdue = (dueDate) => {
 };
 
 
-const JobList = ({ jobs, onDelete, onEdit }) => {
+const JobList = ({ jobs, onDelete, onEdit, query = '' }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [formData, setFormData] = useState({
     company: '', position: '', status: 'Applied',
@@ -58,13 +67,35 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
     });
   };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-  const saveEdit = () => { onEdit(editingIndex, formData); cancelEditing(); };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'status') {
+        if (value !== 'Assessment') {
+            setFormData((prev) => ({ ...prev, status: value, assessmentDueDate: '', assessmentCompleted: false }));
+        } else {
+            setFormData((prev) => ({ ...prev, status: value}));
+        }
+        return;
+    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const saveEdit = () => {
+    const payload = { ...formData };
+    if (payload.status !== 'Assessment') {
+        payload.assessmentDueDate = '';
+        payload.assessmentCompleted = false;
+    }
+    onEdit(editingIndex, payload);
+    cancelEditing();
+  };
+
+  const isValidEdit = formData.company?.trim() && formData.position.trim();
 
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-separate border-spacing-y-2">
-        <thead>
+        <thead className="bg-gray-50 dark:bg-gray-800/60">
           <tr className="text-left text-sm text-gray-600 dark:text-gray-300">
             <th className="px-3 py-2">Company</th>
             <th className="px-3 py-2">Position</th>
@@ -78,68 +109,62 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
         <tbody>
           {jobs.map((job, index) => (
             editingIndex === index ? (
-              <tr key={index} className="bg-white dark:bg-gray-800 shadow rounded">
+              <tr key={index} className="bg-white dark:bg-gray-800 shadow rounded text-gray-800 dark:text-gray-100">
                 <td className="px-3 py-2">
                   <input name="company" value={formData.company} onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300" />
+                    className={inputClass} />
                 </td>
                 <td className="px-3 py-2">
                   <input name="position" value={formData.position} onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300" />
+                    className={inputClass} />
                 </td>
                 <td className="px-3 py-2">
                   <select name="status" value={formData.status} onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300">
+                    className={inputClass}>
                     <option>Applied</option><option>Interview</option>
                     <option>Assessment</option><option>Offer</option><option>Rejected</option>
                   </select>
                 </td>
                 <td className="px-3 py-2">
                   <input name="location" value={formData.location} onChange={handleChange}
-                    className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300" />
+                    className={inputClass} />
                 </td>
                 <td className="px-3 py-2">
                   <div>
-                    <label className="block text-xs mb-1">Date Applied</label>
                     <input type="date" name="dateApplied" value={formData.dateApplied} onChange={handleChange}
-                      className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300" />
+                      className={inputClass} aria-label="Date Applied"/>
                   </div>
                 </td>
                 <td className="px-3 py-2">
                   {formData.status === 'Assessment' && (
                     <div>
-                      <label className="block text-xs mb-1">Assessment Due</label>
                       <input type="date" name="assessmentDueDate" value={formData.assessmentDueDate || ''} onChange={handleChange}
-                        className="w-full px-2 py-1 border rounded bg-pink-50 border-pink-300" />
+                        className={inputClass} aria-label="Assessment Due Date"/>
                     </div>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <div className="flex gap-2">
-                    <button onClick={saveEdit} className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Save</button>
-                    <button onClick={cancelEditing} className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Cancel</button>
-                    <div className="flex gap-2">
-
+                    <div className="flex items-center gap-2 justify-end">
                         <button
-                            onClick={() => startEditing(index)}
-                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                            onClick={saveEdit}
+                            disabled={!isValidEdit}
+                            className={primaryBtn}
+                            aria-label="Save changes"
                         >
-                            Edit
+                            Save
                         </button>
-                        
                         <button
-                            onClick={() => onDelete(index)}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                            onClick={cancelEditing}
+                            className={neutralBtn}
+                            aria-label="Cancel editing"
                         >
-                            Delete
+                            Cancel
                         </button>
                     </div>
-
-                  </div>
                 </td>
               </tr>
             ) : (
-              <tr key={index} className="bg-white dark:bg-gray-800 shadow rounded">
+              <tr key={index} className="bg-white dark:bg-gray-800 shadow rounded text-gray-800 dark:text-gray-100">
                 <td className="px-3 py-2">{job.company}</td>
                 <td className="px-3 py-2">{job.position}</td>
                 <td className="px-3 py-2"><span className={badgeClass(job.status)}>{job.status}</span></td>
@@ -183,7 +208,7 @@ const JobList = ({ jobs, onDelete, onEdit }) => {
                 </td>
 
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2 justify-end">
                     <button onClick={() => startEditing(index)} className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">Edit</button>
                     <button onClick={() => onDelete(index)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
                   </div>

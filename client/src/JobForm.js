@@ -15,42 +15,53 @@ const JobForm = ({ onAdd }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const dueDate = new Date(formData.assessmentDueDate);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Remove time component for accurate comparison
-
-    if (formData.assessmentDueDate && dueDate < today) {
-        alert("⚠️ Assessment due date cannot be in the past!");
-        return;
-    }
-
-    if (formData.company && formData.position) {
-        onAdd(formData);
-        setFormData({
-            company: '',
-            position: '',
-            status: 'Applied',
-            location: '',
-            dateApplied: new Date().toISOString().split('T')[0],
-            assessmentDueDate: ''
-        });
+    today.setHours(0, 0, 0, 0);
+    if (formData.assessmentDueDate) {
+        const due = new Date(formData.assessmentDueDate);
+        if (due < today) {
+            alert("⚠️ Assessment due date cannot be in the past!");
+            return;
+        }
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
     const finalData = {
-    ...formData,
-    dateApplied: formData.dateApplied || todayStr,
-    assessmentCompleted: Boolean(formData.assessmentCompleted),
+        ...formData,
+        dateApplied: formData.dateApplied || todayStr,
+        assessmentCompleted: Boolean(formData.assessmentCompleted),
     };
+
+    if (finalData.status !== 'Assessment') {
+        finalData.assessmentDueDate = '';
+        finalData.assessmentCompleted = false;
+    }
+
     onAdd(finalData);
+
+    setFormData({
+        company: '',
+        position: '',
+        status: 'Applied',
+        location: '',
+        dateApplied: '',
+        assessmentDueDate: '',
+        assessmentCompleted: false,
+    });
+
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-    }));
+    setFormData((prev) => {
+        if (name === 'status') {
+            if (value !== 'Assessment') {
+                return { ...prev, status: value, assessmentDue: '', assessmentCompleted: false };
+            }
+            return { ...prev, status: value };
+        }
+        return { ...prev, [name]: value };
+    });
   };
 
 
@@ -64,7 +75,7 @@ const JobForm = ({ onAdd }) => {
           name="company"
           value={formData.company}
           onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+          className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
           required
         />
       </div>
@@ -76,7 +87,7 @@ const JobForm = ({ onAdd }) => {
           name="position"
           value={formData.position}
           onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+          className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
           required
         />
       </div>
@@ -88,7 +99,7 @@ const JobForm = ({ onAdd }) => {
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="w-full appearance-none px-3 pr-10 py-2 border rounded-md bg-pink-50 border-pink-300"
+            className="w-full appearance-none px-3 pr-10 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
         >
             <option>Applied</option>
             <option>Interview</option>
@@ -110,7 +121,7 @@ const JobForm = ({ onAdd }) => {
             name="location"
             value={formData.location}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
         />
         </div>
 
@@ -121,7 +132,7 @@ const JobForm = ({ onAdd }) => {
             name="dateApplied"
             value={formData.dateApplied}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
             required
         />
         </div>
@@ -135,7 +146,7 @@ const JobForm = ({ onAdd }) => {
             name="assessmentDueDate"
             value={formData.assessmentDueDate}
             onChange={handleChange}
-            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300"
+            className="w-full px-3 py-2 border rounded-md bg-pink-50 border-pink-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
             />
         </div>
         )}
