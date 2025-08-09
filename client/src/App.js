@@ -9,6 +9,7 @@ import Navbar from './Navbar';
 import JobForm from './JobForm';
 import JobList from './JobList';
 import AddJobModal from './AddJobModal';
+import StatsBar from './StatsBar';
 
 function App() {
   const [jobs, setJobs] = useState(() => {
@@ -55,6 +56,37 @@ function App() {
       (filterStatus === 'All' || job.status === filterStatus) &&
       matchesSearch(job, searchTerm)
   );
+
+  const statusCounts = jobs.reduce(
+    (acc, j) => {
+      acc.total += 1;
+      acc[j.status] = (acc[j.status] || 0) + 1;
+
+      // due soon / overdue (only if Assessment and not completed)
+      if (j.status === 'Assessment' && j.assessmentDueDate && !j.assessmentCompleted) {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const d = new Date(j.assessmentDueDate);
+        const diff = (d - today) / (1000*60*60*24);
+        if (diff < 0) acc.overdue += 1;
+        if (diff >= 0 && diff <= 3) acc.dueSoon += 1;
+      }
+
+      if (j.assessmentCompleted) acc.completedAssessments += 1;
+      return acc;
+    },
+    {
+      total: 0,
+      Applied: 0,
+      Interview: 0,
+      Assessment: 0,
+      Offer: 0,
+      Rejected: 0,
+      dueSoon: 0,
+      overdue: 0,
+      completedAssessments: 0,
+    }
+  );
+
 
   return (
     <>
@@ -115,6 +147,8 @@ function App() {
           <AddJobModal open={showAdd} onClose={() => setShowAdd(false)}>
             <JobForm onAdd={(job) => { addJob(job); setShowAdd(false); }} />
           </AddJobModal>
+
+          <StatsBar stats={statusCounts} />
 
           <JobList
             jobs={filteredJobs}
