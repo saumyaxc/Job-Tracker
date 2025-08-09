@@ -1,9 +1,9 @@
-// src/App.js
-
 import React, { useState, useEffect } from 'react';
 import ChevronDownIcon from '@heroicons/react/24/solid/ChevronDownIcon';
 import PlusIcon from '@heroicons/react/24/solid/PlusIcon';
 import MagnifyingGlassIcon from '@heroicons/react/24/solid/MagnifyingGlassIcon';
+import * as XLSX from 'xlsx';
+import ArrowUpTrayIcon from '@heroicons/react/24/solid/ArrowUpTrayIcon';
 
 import Navbar from './Navbar';
 import JobForm from './JobForm';
@@ -46,7 +46,7 @@ function App() {
     return (
       job.company?.toLowerCase().includes(s) ||
       job.position?.toLowerCase().includes(s)
-      // add location too if you want:
+      // add location ?
       // || job.location?.toLowerCase().includes(s)
     );
   };
@@ -87,6 +87,101 @@ function App() {
     }
   );
 
+  // Excel serial date → "YYYY-MM-DD" or pass through if already string
+  const toISODate = (value) => {
+    if (!value) return '';
+    // If it's already "YYYY-MM-DD"
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+    // If it's a Date object
+    if (value instanceof Date && !isNaN(value)) {
+      return value.toISOString().split('T')[0];
+    }
+
+    // Excel serial (number)
+    if (typeof value === 'number') {
+      const date = XLSX.SSF.parse_date_code(value); // {y,m,d}
+      if (date && date.y && date.m && date.d) {
+        const mm = String(date.m).padStart(2, '0');
+        const dd = String(date.d).padStart(2, '0');
+        return `${date.y}-${mm}-${dd}`;
+      }
+    }
+
+    // Fallback: try new Date(string)
+    const d = new Date(value);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+
+    return '';
+  };
+
+  // Normalize header keys (strip spaces, case, typos)
+  const norm = (s = '') => s.trim().toLowerCase().replace(/\s+/g, '');
+
+  // Turn a row → your job object
+  const rowToJob = (row) => {
+    // Accept both "assessment" and the typo "assesment"
+    const assessmentHeader =
+      row['assessmentduedate'] ?? row['assesmentduedate'] ?? row['assessmentdue'] ?? row['assesmentdue'];
+
+    return {
+      company: row['company'] ?? '',
+      position: row['position'] ?? '',
+      status: row['status'] ?? 'Applied',
+      location: row['location'] ?? '',
+      dateApplied: toISODate(row['dateapplied']),
+      assessmentDueDate: toISODate(assessmentHeader),
+      assessmentCompleted: false,
+    };
+  };
+
+  // Optional: basic de-dupe by (company+position+dateApplied)
+  const dedupeMerge = (existing, incoming) => {
+    const key = (j) => `${j.company}__${j.position}__${j.dateApplied}`;
+    const seen = new Set(existing.map(key));
+    const uniqueIncoming = incoming.filter((j) => {
+      const k = key(j);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    return [...existing, ...uniqueIncoming];
+  };
+
+  const handleImportFile = async (file) => {
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+
+    // Read with raw headers, then normalize
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true }); // array of arrays
+    if (!rows.length) return;
+
+    const headers = rows[0].map((h) => norm(String(h || '')));
+    const body = rows.slice(1);
+
+    // Build objects with normalized keys
+    const normalized = body
+      .map((arr) => {
+        const obj = {};
+        headers.forEach((h, i) => {
+          obj[h] = arr[i];
+        });
+        return obj;
+      })
+      .filter((o) => o && (o['company'] || o['position'])); // ignore empty lines
+
+    const jobsFromSheet = normalized.map(rowToJob);
+
+    // Merge (with simple de-dupe)
+    setJobs((prev) => dedupeMerge(prev, jobsFromSheet));
+  } catch (e) {
+    console.error('Import failed:', e);
+    alert('Could not import that file. Make sure it is a valid Excel (.xlsx/.xls).');
+  }
+};
+
 
   return (
     <>
@@ -106,6 +201,26 @@ function App() {
               <PlusIcon className="w-5 h-5" />
               Add Job
             </button>
+
+            {/* Left: Add + Import */}
+            <div className="flex items-center gap-2">
+              {/* Import icon button */}
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-pink-300 text-pink-700 hover:bg-pink-50 dark:border-gray-700 dark:text-pink-300 dark:hover:bg-gray-800 cursor-pointer">
+                <ArrowUpTrayIcon className="w-5 h-5" />
+                <span className="text-sm">Import</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImportFile(file);
+                    e.target.value = ''; // allow re-choose same file later
+                  }}
+                />
+              </label>
+            </div>
+
 
             {/* Right: Filter */}
             <div className="flex items-center gap-3">
